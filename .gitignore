@@ -1,0 +1,9 @@
+.xmake/
+.cache/
+.vs/
+.vscode/
+.zed/
+.idea/
+.fleet/
+
+build/
