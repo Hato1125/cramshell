@@ -75,7 +75,7 @@ namespace {
   }
 }
 
-namespace cramshell {
+namespace clamshell {
   bool check_suspend_caps() noexcept {
     std::ifstream file("/sys/power/state");
 

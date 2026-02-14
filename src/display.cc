@@ -4,7 +4,7 @@
 
 #include "display.hh"
 
-namespace cramshell {
+namespace clamshell {
   int get_display_count() noexcept {
     int count = 0;
 

@@ -6,7 +6,7 @@
 
 #include "lid.hh"
 
-namespace cramshell {
+namespace clamshell {
   bool has_lid() noexcept {
     return std::filesystem::exists("/proc/acpi/button/lid/LID/state");
   }
