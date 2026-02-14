@@ -67,6 +67,12 @@ namespace {
     file << "0";
     return file.good();
   }
+
+  bool move_self_to_system_slice() noexcept {
+    std::ofstream file("/sys/fs/cgroup/system.slice/cgroup.procs");
+    file << getpid();
+    return file.good();
+  }
 }
 
 namespace cramshell {
@@ -98,7 +104,8 @@ namespace cramshell {
 
   void suspend() noexcept {
     sync();
-    if (freeze_user_processes()) {
+
+    if (move_self_to_system_slice() && freeze_user_processes()) {
       write_nvidia_suspend();
       write_suspend();
     }
