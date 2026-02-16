@@ -1,25 +1,27 @@
 #include <filesystem>
 #include <string>
 #include <fstream>
-#include <fstream>
 #include <sstream>
 
 #include "lid.hh"
 
+namespace {
+  constexpr const char* lid_path = "/proc/acpi/button/lid/LID/state";
+}
+
 namespace clamshell {
   bool has_lid() noexcept {
-    return std::filesystem::exists("/proc/acpi/button/lid/LID/state");
+    return std::filesystem::exists(lid_path);
   }
 
   bool is_open_lid() noexcept {
-    std::ifstream lid("/proc/acpi/button/lid/LID/state");
+    std::ifstream lid(lid_path);
 
     if (lid.is_open()) {
       std::string str;
       std::string part;
       std::getline(lid, str);
       std::istringstream iss(str);
-
 
       while (iss >> part) {
         if (part == "opened") {
@@ -29,7 +31,6 @@ namespace clamshell {
           return false;
         }
       }
-      lid.close();
     }
 
     return true;

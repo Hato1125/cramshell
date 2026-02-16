@@ -1,4 +1,4 @@
-#include <iostream>
+#include <print>
 #include <thread>
 #include <chrono>
 
@@ -6,14 +6,16 @@
 #include "suspend.hh"
 #include "display.hh"
 
+using namespace std::chrono_literals;
+
 int main() {
   if (!clamshell::has_lid()) {
-    std::cout << "Clamshell is not possible with this device as there is no lid.\n";
+    std::println("Clamshell is not possible with this device as there is no lid.");
     return EXIT_FAILURE;
   }
 
   if (!clamshell::check_suspend_caps()) {
-    std::cout << "No suspend available for this device.\n";
+    std::println("No suspend available for this device.");
     return EXIT_FAILURE;
   }
 
@@ -27,7 +29,7 @@ int main() {
       }
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(1s);
   }
 
   return EXIT_SUCCESS;

@@ -27,9 +27,6 @@ namespace clamshell {
         if (status == "connected") {
           count++;
         }
-
-        card.close();
-
       }
     }
 

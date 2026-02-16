@@ -8,6 +8,11 @@
 #include "suspend.hh"
 
 namespace {
+  constexpr const char* power_state_path = "/sys/power/state";
+  constexpr const char* nvidia_suspend_path = "/proc/driver/nvidia/suspend";
+  constexpr const char* cgroup_freeze_path = "/sys/fs/cgroup/user.slice/cgroup.freeze";
+  constexpr const char* cgroup_proc_path = "/sys/fs/cgroup/system.slice/cgroup.procs";
+
   struct suspend_caps {
     unsigned char freeze : 1;
     unsigned char standby : 1;
@@ -24,7 +29,7 @@ namespace {
   };
 
   void write_suspend() noexcept {
-    std::ofstream state("/sys/power/state");
+    std::ofstream state(power_state_path);
     if (state.is_open()) {
       if (caps.freeze) {
         state << "freeze";
@@ -35,41 +40,38 @@ namespace {
       } else if (caps.disk) {
         state << "disk";
       }
-      state.close();
     }
   }
 
   void write_nvidia_suspend() noexcept {
-    std::ofstream state("/proc/driver/nvidia/suspend");
+    std::ofstream state(nvidia_suspend_path);
     if (state.is_open()) {
       state << "suspend";
-      state.close();
     }
   }
 
   void write_nvidia_resume() noexcept {
-    std::ofstream state("/proc/driver/nvidia/suspend");
+    std::ofstream state(nvidia_suspend_path);
     if (state.is_open()) {
       state << "resume";
-      state.close();
     }
   }
 
   bool freeze_user_processes() noexcept {
-    std::ofstream file("/sys/fs/cgroup/user.slice/cgroup.freeze");
+    std::ofstream file(cgroup_freeze_path);
     file << "1";
     return file.good();
   }
 
 
   bool unfreeze_user_processes() noexcept {
-    std::ofstream file("/sys/fs/cgroup/user.slice/cgroup.freeze");
+    std::ofstream file(cgroup_freeze_path);
     file << "0";
     return file.good();
   }
 
   bool move_self_to_system_slice() noexcept {
-    std::ofstream file("/sys/fs/cgroup/system.slice/cgroup.procs");
+    std::ofstream file(cgroup_proc_path);
     file << getpid();
     return file.good();
   }
@@ -77,7 +79,7 @@ namespace {
 
 namespace clamshell {
   bool check_suspend_caps() noexcept {
-    std::ifstream file("/sys/power/state");
+    std::ifstream file(power_state_path);
 
     if (file.is_open()) {
       std::string state;
@@ -96,7 +98,6 @@ namespace clamshell {
           caps.disk = 1;
         }
       }
-      file.close();
     }
 
     return std::bit_cast<unsigned char>(caps) != 0;
