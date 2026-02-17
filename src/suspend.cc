@@ -105,10 +105,12 @@ namespace clamshell {
 
   void suspend() noexcept {
     sync();
+    write_nvidia_suspend();
 
     if (move_self_to_system_slice() && freeze_user_processes()) {
-      write_nvidia_suspend();
       write_suspend();
+    } else {
+      write_nvidia_resume();
     }
   }
 
