@@ -183,7 +183,7 @@ namespace {
     std::ofstream file(cgroup_freeze_path);
     file << "1";
     const bool ok = file.good();
-    CLAMSHELL_TRACE("freeze user processes: {}", ok ? "ok" : "failed");
+    CLAMSHELL_INFO("freeze user processes: {}", ok ? "ok" : "failed");
     return ok;
   }
 
@@ -192,7 +192,7 @@ namespace {
     std::ofstream file(cgroup_freeze_path);
     file << "0";
     const bool ok = file.good();
-    CLAMSHELL_TRACE("unfreeze user processes: {}", ok ? "ok" : "failed");
+    CLAMSHELL_INFO("unfreeze user processes: {}", ok ? "ok" : "failed");
     return ok;
   }
 
@@ -201,7 +201,7 @@ namespace {
     std::ofstream file(cgroup_proc_path);
     file << getpid();
     const bool ok = file.good();
-    CLAMSHELL_TRACE("move self to system slice: {}", ok ? "ok" : "failed");
+    CLAMSHELL_INFO("move self to system slice: {}", ok ? "ok" : "failed");
     return ok;
   }
 }
