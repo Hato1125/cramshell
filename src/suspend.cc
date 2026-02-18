@@ -179,22 +179,30 @@ namespace {
   }
 
   bool freeze_user_processes() noexcept {
+    CLAMSHELL_TRACE("freeze user processes");
     std::ofstream file(cgroup_freeze_path);
     file << "1";
-    return file.good();
+    const bool ok = file.good();
+    CLAMSHELL_TRACE("freeze user processes: {}", ok ? "ok" : "failed");
+    return ok;
   }
 
-
   bool unfreeze_user_processes() noexcept {
+    CLAMSHELL_TRACE("unfreeze user processes");
     std::ofstream file(cgroup_freeze_path);
     file << "0";
-    return file.good();
+    const bool ok = file.good();
+    CLAMSHELL_TRACE("unfreeze user processes: {}", ok ? "ok" : "failed");
+    return ok;
   }
 
   bool move_self_to_system_slice() noexcept {
+    CLAMSHELL_TRACE("move self to system slice");
     std::ofstream file(cgroup_proc_path);
     file << getpid();
-    return file.good();
+    const bool ok = file.good();
+    CLAMSHELL_TRACE("move self to system slice: {}", ok ? "ok" : "failed");
+    return ok;
   }
 }
 
