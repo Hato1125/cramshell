@@ -9,10 +9,13 @@
 
 using namespace std::chrono_literals;
 
+namespace {
+  bool clamshelled = false;
+}
+
 int main() {
   clamshell::notify::init();
   clamshell::config::load();
-
 
   if (!clamshell::has_lid()) {
     CLAMSHELL_FATAL("clamshell is not possible with this device as there is no lid");
@@ -27,12 +30,27 @@ int main() {
   while (true) {
     CLAMSHELL_INFO("display count: \033[1m{}\033[22m", clamshell::get_display_count());
     CLAMSHELL_INFO("lid open: \033[1m{}\033[22m", clamshell::is_open_lid());
-    if (clamshell::get_display_count() == 1) {
-      if (!clamshell::is_open_lid()) {
+
+    if (!clamshell::is_open_lid()) {
+      if (clamshell::get_display_count() > 1) {
+        if (clamshell::config::notify && !clamshelled) {
+          CLAMSHELL_TRACE("notify");
+          clamshell::notify::send(
+            "Clamshell",
+            "computer-laptop",
+            "Clamshell Mode Enabled",
+            "Lid closed. External display is now active."
+          );
+          clamshelled = true;
+        }
+      } else {
+        CLAMSHELL_TRACE("suspend");
         // Program execution stops here during suspend, preventing multiple
         // suspend requests while the system is already suspended.
         clamshell::suspend();
       }
+    } else {
+      clamshelled = false;
     }
 
     std::this_thread::sleep_for(1s);
