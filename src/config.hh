@@ -15,7 +15,6 @@ namespace clamshell::config {
     suspend_to_disk,
   };
 
-  inline bool notify = false;
   inline bool fallback = false;
   inline nvidia_method nvidia_method_type = nvidia_method::official_script;
   inline suspend_mode suspend_mode_type = suspend_mode::freeze;

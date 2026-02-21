@@ -33,7 +33,6 @@ namespace {
     if (result) {
       const auto& table = result.table();
 
-      notify = table["notify"].value_or(true);
       fallback = table["fallback"].value_or(false);
       nvidia_method_type = parse_nvidia_method(
         table["nvidia_method_type"].value_or(""sv)
