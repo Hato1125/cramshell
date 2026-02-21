@@ -35,6 +35,7 @@ target('clamshell-daemon')
     'xdgcpp',
     'toml++'
   )
+  add_includedirs('src')
   add_defines('TOML_HEADER_ONLY=1')
 
 
@@ -45,4 +46,5 @@ target('clamshell-agent')
     'xdgcpp',
     'toml++'
   )
+  add_includedirs('src')
   add_defines('TOML_HEADER_ONLY=1')

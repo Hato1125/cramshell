@@ -6,7 +6,8 @@
 
 #include "suspend.hh"
 #include "config.hh"
-#include "log.hh"
+
+#include "share/log.hh"
 
 namespace {
   using namespace clamd;
@@ -108,7 +109,7 @@ namespace {
   }
 
   void freeze() noexcept {
-    CLAMSHELL_TRACE("execute suspend with \033[1mfreeze\033[22m");
+    CLAM_TRACE("execute suspend with \033[1mfreeze\033[22m");
     std::ofstream state(power_state_path);
     if (state.is_open()) {
       state << "freeze";
@@ -116,7 +117,7 @@ namespace {
   }
 
   void suspend_to_ram() noexcept {
-    CLAMSHELL_TRACE("execute suspend with \033[1msuspend to ram\033[22m");
+    CLAM_TRACE("execute suspend with \033[1msuspend to ram\033[22m");
     std::ofstream mem(mem_power_state_path);
     if (mem.is_open()) {
       mem << "deep";
@@ -129,7 +130,7 @@ namespace {
   }
 
   void suspend_to_disk() noexcept {
-    CLAMSHELL_TRACE("execute suspend with \033[1msuspend to disk\033[22m");
+    CLAM_TRACE("execute suspend with \033[1msuspend to disk\033[22m");
     std::ofstream state(power_state_path);
     if (state.is_open()) {
       state << "disk";
@@ -140,15 +141,15 @@ namespace {
     switch (config::nvidia_method_type) {
       case config::nvidia_method::official_script:
         if (config::suspend_mode_type == config::suspend_mode::suspend_to_disk) {
-          CLAMSHELL_TRACE("execute nvidia suspend with \033[1mhibernate\033[22m");
+          CLAM_TRACE("execute nvidia suspend with \033[1mhibernate\033[22m");
           std::system("/usr/bin/nvidia-sleep.sh hibernate");
         } else {
-          CLAMSHELL_TRACE("execute nvidia suspend with \033[1msuspend\033[22m");
+          CLAM_TRACE("execute nvidia suspend with \033[1msuspend\033[22m");
           std::system("/usr/bin/nvidia-sleep.sh suspend");
         }
         break;
       case config::nvidia_method::direct_proc:
-        CLAMSHELL_TRACE("execute nvidia suspend with \033[1mdirect proc\033[22m");
+        CLAM_TRACE("execute nvidia suspend with \033[1mdirect proc\033[22m");
         std::ofstream state(nvidia_suspend_path);
         if (state.is_open()) {
           state << "suspend";
@@ -161,15 +162,15 @@ namespace {
     switch (config::nvidia_method_type) {
       case config::nvidia_method::official_script:
         if (config::suspend_mode_type == config::suspend_mode::suspend_to_disk) {
-          CLAMSHELL_TRACE("execute nvidia resume with \033[1mthaw\033[22m");
+          CLAM_TRACE("execute nvidia resume with \033[1mthaw\033[22m");
           std::system("/usr/bin/nvidia-sleep.sh thaw");
         } else {
-          CLAMSHELL_TRACE("execute nvidia resume with \033[1mresume\033[22m");
+          CLAM_TRACE("execute nvidia resume with \033[1mresume\033[22m");
           std::system("/usr/bin/nvidia-sleep.sh resume");
         }
         break;
       case config::nvidia_method::direct_proc:
-        CLAMSHELL_TRACE("execute nvidia resume with \033[1mdirect proc\033[22m");
+        CLAM_TRACE("execute nvidia resume with \033[1mdirect proc\033[22m");
         std::ofstream state(nvidia_suspend_path);
         if (state.is_open()) {
           state << "resume";
@@ -179,29 +180,29 @@ namespace {
   }
 
   bool freeze_user_processes() noexcept {
-    CLAMSHELL_TRACE("freeze user processes");
+    CLAM_TRACE("freeze user processes");
     std::ofstream file(cgroup_freeze_path);
     file << "1";
     const bool ok = file.good();
-    CLAMSHELL_INFO("freeze user processes: {}", ok ? "ok" : "failed");
+    CLAM_INFO("freeze user processes: {}", ok ? "ok" : "failed");
     return ok;
   }
 
   bool unfreeze_user_processes() noexcept {
-    CLAMSHELL_TRACE("unfreeze user processes");
+    CLAM_TRACE("unfreeze user processes");
     std::ofstream file(cgroup_freeze_path);
     file << "0";
     const bool ok = file.good();
-    CLAMSHELL_INFO("unfreeze user processes: {}", ok ? "ok" : "failed");
+    CLAM_INFO("unfreeze user processes: {}", ok ? "ok" : "failed");
     return ok;
   }
 
   bool move_self_to_system_slice() noexcept {
-    CLAMSHELL_TRACE("move self to system slice");
+    CLAM_TRACE("move self to system slice");
     std::ofstream file(cgroup_proc_path);
     file << getpid();
     const bool ok = file.good();
-    CLAMSHELL_INFO("move self to system slice: {}", ok ? "ok" : "failed");
+    CLAM_INFO("move self to system slice: {}", ok ? "ok" : "failed");
     return ok;
   }
 }
@@ -209,7 +210,7 @@ namespace {
 namespace clamd {
   bool check_suspend_caps() noexcept {
     get_sleep_cap();
-    CLAMSHELL_INFO(
+    CLAM_INFO(
       "sleep caps {{\n  freeze = \033[1m{}\033[22m\n  standby = \033[1m{}\033[22m\n  mem = \033[1m{}\033[22m\n  disk = \033[1m{}\033[22m\n}}",
       sleep_caps.freeze ? "true" : "false",
       sleep_caps.standby ? "true" : "false",
@@ -218,7 +219,7 @@ namespace clamd {
     );
 
     get_mem_sleep_cap();
-    CLAMSHELL_INFO(
+    CLAM_INFO(
       "mem_sleep_caps {{\n  s2idle = \033[1m{}\033[22m\n  shallow = \033[1m{}\033[22m\n  deep = \033[1m{}\033[22m\n}}",
       mem_sleep_caps.s2idle ? "true" : "false",
       mem_sleep_caps.shallow ? "true" : "false",

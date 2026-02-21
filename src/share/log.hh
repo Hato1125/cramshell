@@ -1,0 +1,43 @@
+#ifndef _CLAMSHELL_LOG_HH
+#define _CLAMSHELL_LOG_HH
+
+#include <print>
+#include <format>
+#include <string_view>
+#include <source_location>
+
+namespace detail {
+  template <typename ...Args>
+  void log(
+    std::string_view esc,
+    std::string_view category,
+    std::source_location location,
+    std::format_string<Args...> fmt,
+    Args&&... args
+  ) noexcept {
+    std::println(
+      "{}[clamshell::{} {}:{}] {}\033[0m",
+      esc,
+      category,
+      location.line(),
+      location.column(),
+      std::format(fmt, std::forward<Args>(args)...)
+    );
+  }
+}
+
+#ifdef RELEASE
+  #define CLAM_INFO(fmt, ...)
+  #define CLAM_TRACE(fmt, ...)
+  #define CLAM_WARN(fmt, ...)
+  #define CLAM_ERROR(fmt, ...)
+#else
+  #define CLAM_INFO(fmt, ...) detail::log("\x1b[32m", "info", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
+  #define CLAM_TRACE(fmt, ...) detail::log("\x1b[34m", "trace", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
+  #define CLAM_WARN(fmt, ...) detail::log("\x1b[33m", "warn", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
+  #define CLAM_ERROR(fmt, ...) detail::log("\x1b[31m", "error", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
+#endif
+
+#define CLAM_FATAL(fmt, ...) detail::log("\x1b[31m", "fatal", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
+
+#endif
