@@ -28,9 +28,19 @@ end
 set_allowedplats('linux')
 set_languages('c++26')
 
-target('cramshell')
+target('clamshell-daemon')
   set_kind('binary')
-  add_files('src/**.cc')
+  add_files('src/daemon/**.cc')
+  add_packages(
+    'xdgcpp',
+    'toml++'
+  )
+  add_defines('TOML_HEADER_ONLY=1')
+
+
+target('clamshell-agent')
+  set_kind('binary')
+  add_files('src/agent/**.cc')
   add_packages(
     'xdgcpp',
     'toml++'
