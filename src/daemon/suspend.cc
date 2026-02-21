@@ -9,7 +9,7 @@
 #include "log.hh"
 
 namespace {
-  using namespace clamshell;
+  using namespace clamd;
 
   constexpr const char* power_state_path = "/sys/power/state";
   constexpr const char* mem_power_state_path = "/sys/power/mem_sleep";
@@ -206,7 +206,7 @@ namespace {
   }
 }
 
-namespace clamshell {
+namespace clamd {
   bool check_suspend_caps() noexcept {
     get_sleep_cap();
     CLAMSHELL_INFO(

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace clamshell::config {
+namespace clamd::config {
   enum class nvidia_method : std::uint8_t {
     official_script,
     direct_proc,

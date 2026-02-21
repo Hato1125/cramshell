@@ -9,7 +9,7 @@ namespace {
   constexpr const char* lid_path = "/proc/acpi/button/lid/LID/state";
 }
 
-namespace clamshell {
+namespace clamd {
   bool has_lid() noexcept {
     return std::filesystem::exists(lid_path);
   }
