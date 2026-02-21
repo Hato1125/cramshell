@@ -11,6 +11,7 @@ package('xdgcpp')
   )
 package_end()
 
+add_requires('dbus')
 add_requires('xdgcpp')
 add_requires('toml++')
 
@@ -32,6 +33,7 @@ target('cramshell')
   set_kind('binary')
   add_files('src/**.cc')
   add_packages(
+    'dbus',
     'xdgcpp',
     'toml++'
   )

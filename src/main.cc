@@ -5,11 +5,14 @@
 #include "suspend.hh"
 #include "display.hh"
 #include "config.hh"
+#include "notify.hh"
 
 using namespace std::chrono_literals;
 
 int main() {
+  clamshell::notify::init();
   clamshell::config::load();
+
 
   if (!clamshell::has_lid()) {
     CLAMSHELL_FATAL("clamshell is not possible with this device as there is no lid");
@@ -34,6 +37,8 @@ int main() {
 
     std::this_thread::sleep_for(1s);
   }
+
+  clamshell::notify::deinit();
 
   return EXIT_SUCCESS;
 }
