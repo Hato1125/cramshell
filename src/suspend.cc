@@ -34,20 +34,7 @@ namespace {
     unsigned char _ : 5;
   };
 
-  sleep_caps sleep_caps {
-    .freeze = 0,
-    .standby = 0,
-    .mem = 0,
-    .disk = 0,
-  };
-
-  mem_sleep_caps mem_sleep_caps {
-    .s2idle = 0,
-    .shallow = 0,
-    .deep = 0,
-  };
-
-  void get_sleep_cap() noexcept {
+  void get_sleep_cap(sleep_caps& caps) noexcept {
     std::ifstream file(power_state_path);
 
     if (file.is_open()) {
@@ -58,19 +45,19 @@ namespace {
 
       while (iss >> part) {
         if (part == "freeze") {
-          sleep_caps.freeze = 1;
+          caps.freeze = 1;
         } else if (part == "standby") {
-          sleep_caps.standby = 1;
+          caps.standby = 1;
         } else if (part == "mem") {
-          sleep_caps.mem = 1;
+          caps.mem = 1;
         } else if (part == "disk") {
-          sleep_caps.disk = 1;
+          caps.disk = 1;
         }
       }
     }
   }
 
-  void get_mem_sleep_cap() noexcept {
+  void get_mem_sleep_cap(mem_sleep_caps& caps) noexcept {
     std::ifstream file(mem_power_state_path);
 
     if (file.is_open()) {
@@ -85,26 +72,29 @@ namespace {
         }
 
         if (part == "s2idle") {
-          mem_sleep_caps.s2idle = 1;
+          caps.s2idle = 1;
         } else if (part == "shallow") {
-          mem_sleep_caps.shallow = 1;
+          caps.shallow = 1;
         } else if (part == "deep") {
-          mem_sleep_caps.deep = 1;
+          caps.deep = 1;
         }
       }
     }
   }
 
-  bool is_freeze_available() noexcept {
-    return sleep_caps.freeze;
+  bool is_freeze_available(const sleep_caps& caps) noexcept {
+    return caps.freeze;
   }
 
-  bool is_suspend_to_ram_available() noexcept {
-    return sleep_caps.mem && mem_sleep_caps.deep;
+  bool is_suspend_to_ram_available(
+    const sleep_caps& sleep_caps,
+    const mem_sleep_caps& mem_caps
+  ) noexcept {
+    return sleep_caps.mem && mem_caps.deep;
   }
 
-  bool is_suspend_to_disk_available() noexcept {
-    return sleep_caps.disk;
+  bool is_suspend_to_disk_available(const sleep_caps& caps) noexcept {
+    return caps.disk;
   }
 
   void freeze() noexcept {
@@ -208,7 +198,10 @@ namespace {
 
 namespace clamshell {
   bool check_suspend_caps() noexcept {
-    get_sleep_cap();
+    sleep_caps sleep_caps{};
+    mem_sleep_caps mem_caps{};
+
+    get_sleep_cap(sleep_caps);
     CLAMSHELL_INFO(
       "sleep caps {{\n  freeze = \033[1m{}\033[22m\n  standby = \033[1m{}\033[22m\n  mem = \033[1m{}\033[22m\n  disk = \033[1m{}\033[22m\n}}",
       sleep_caps.freeze ? "true" : "false",
@@ -217,25 +210,25 @@ namespace clamshell {
       sleep_caps.disk ? "true" : "false"
     );
 
-    get_mem_sleep_cap();
+    get_mem_sleep_cap(mem_caps);
     CLAMSHELL_INFO(
       "mem_sleep_caps {{\n  s2idle = \033[1m{}\033[22m\n  shallow = \033[1m{}\033[22m\n  deep = \033[1m{}\033[22m\n}}",
-      mem_sleep_caps.s2idle ? "true" : "false",
-      mem_sleep_caps.shallow ? "true" : "false",
-      mem_sleep_caps.deep ? "true" : "false"
+      mem_caps.s2idle ? "true" : "false",
+      mem_caps.shallow ? "true" : "false",
+      mem_caps.deep ? "true" : "false"
     );
 
     if (!config::fallback) {
       switch (config::suspend_mode_type) {
         case config::suspend_mode::freeze:
           use_suspend_mode = config::suspend_mode::freeze;
-          return is_freeze_available();
+          return is_freeze_available(sleep_caps);
         case config::suspend_mode::suspend_to_ram:
           use_suspend_mode = config::suspend_mode::suspend_to_ram;
-          return is_suspend_to_ram_available();
+          return is_suspend_to_ram_available(sleep_caps, mem_caps);
         case config::suspend_mode::suspend_to_disk:
           use_suspend_mode = config::suspend_mode::suspend_to_disk;
-          return is_suspend_to_disk_available();
+          return is_suspend_to_disk_available(sleep_caps);
       }
     }
 
@@ -267,11 +260,11 @@ namespace clamshell {
       case mode::suspend_to_disk: order = disk_fallback; break;
     }
 
-    const auto is_available = [](mode m) -> bool {
+    const auto is_available = [&sleep_caps, &mem_caps](mode m) -> bool {
       switch (m) {
-        case mode::freeze: return is_freeze_available();
-        case mode::suspend_to_ram: return is_suspend_to_ram_available();
-        case mode::suspend_to_disk: return is_suspend_to_disk_available();
+        case mode::freeze: return is_freeze_available(sleep_caps);
+        case mode::suspend_to_ram: return is_suspend_to_ram_available(sleep_caps, mem_caps);
+        case mode::suspend_to_disk: return is_suspend_to_disk_available(sleep_caps);
       }
       return false;
     };
