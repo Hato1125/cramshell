@@ -28,7 +28,7 @@ end
 set_allowedplats('linux')
 set_languages('c++26')
 
-target('cramshell')
+target('clamshell')
   set_kind('binary')
   add_files('src/**.cc')
   add_packages(
