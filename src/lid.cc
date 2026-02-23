@@ -1,7 +1,6 @@
 #include <filesystem>
 #include <string>
 #include <fstream>
-#include <sstream>
 
 #include "lid.hh"
 
@@ -18,18 +17,13 @@ namespace clamshell {
     static std::ifstream lid(lid_path);
 
     if (lid.is_open()) {
+      lid.clear();
+      lid.seekg(0);
       std::string str;
-      std::string part;
       std::getline(lid, str);
-      std::istringstream iss(str);
 
-      while (iss >> part) {
-        if (part == "opened") {
-          return true;
-        }
-        if (part == "closed") {
-          return false;
-        }
+      if (str.contains("closed")) {
+        return false;
       }
     }
 

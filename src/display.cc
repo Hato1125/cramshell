@@ -9,7 +9,7 @@ namespace clamshell {
     int count = 0;
 
     for (const auto& file : std::filesystem::directory_iterator("/sys/class/drm/")) {
-      bool is_card = file
+      const bool is_card = file
         .path()
         .filename()
         .string()
@@ -19,11 +19,12 @@ namespace clamshell {
         continue;
       }
 
-      std::ifstream card((file.path() / "status").string());
+      std::ifstream card((file.path() / "status"));
 
       if (card.is_open()) {
         std::string status;
         std::getline(card, status);
+
         if (status == "connected") {
           count++;
         }
