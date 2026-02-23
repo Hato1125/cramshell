@@ -1,18 +1,25 @@
 <div align="center">
-  <img src="asset/shell.png" width="64">
+  <img src="asset/shell.png" width="82">
   <h1>CLAMSHELL</h1>
-  <p>
-    A lightweight daemon for implementing clamshell functionality on Linux without dependencies on systemd or other init systems.
-  </p>
+  <p>Comfortable clamshell mode for Linux</p>
 </div>
 
-## WHAT IS CLAMSHELL MODE?
-Clamshell mode allows your laptop to continue running with the lid closed, typically while connected to an external monitor, keyboard, and mouse
+<div align="center">
+  <img src="https://img.shields.io/badge/LANG-C++-000000.svg?logo=&style=for-the-badge">
+  <img src="https://img.shields.io/badge/OS-Linux-000000.svg?logo=&style=for-the-badge">
+</div>
 
-## WHY CLAMSHELL?
-Traditional clamshell implementations often have limitations:
-- Dependency on specific init systems (usually systemd)
-- Requirement for AC power connection
-- Complex setup procedures
+## What is clamshell mode?
+Clamshell mode allows you to work with your laptop lid closed, using an external monitor, keyboard, and mouse.
 
-clamshell solves these issues by providing a standalone daemon that works regardless of your init system and allows battery-powered operation.
+## How to enable clamshell mode
+**Required**
+- At least one external monitor is connected
+- The laptop lid is closed
+
+**Optional**
+- The laptop is connected to AC power
+
+## Comparison
+macOS and systemd-based implementations require AC power as an absolute condition for clamshell mode, but clamshell does not.
+It also does not depend on any init system, so it works in any environment.
