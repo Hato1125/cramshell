@@ -15,7 +15,7 @@ namespace clamshell {
   }
 
   bool is_open_lid() noexcept {
-    std::ifstream lid(lid_path);
+    static std::ifstream lid(lid_path);
 
     if (lid.is_open()) {
       std::string str;
