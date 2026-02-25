@@ -35,4 +35,9 @@ target('clamshell')
     'xdgcpp',
     'toml++'
   )
+  if is_mode("debug") then
+    add_defines("DEBUG")
+  elseif is_mode("release") then
+    add_defines("RELEASE")
+  end
   add_defines('TOML_HEADER_ONLY=1')
