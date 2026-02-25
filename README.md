@@ -18,7 +18,7 @@ Clamshell mode allows you to work with your laptop lid closed, using an external
 - The laptop lid is closed
 
 **Optional**
-- The laptop is connected to AC power
+- ~~The laptop is connected to AC power~~ TODO
 
 ## Comparison
 macOS and systemd-based implementations require AC power as an absolute condition for clamshell mode, but clamshell does not.
