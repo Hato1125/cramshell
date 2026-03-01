@@ -30,7 +30,6 @@ set_languages('c++26')
 
 target('clamshell')
   set_kind('binary')
-  set_installdir('/usr')
   add_files('src/**.cc')
   add_packages(
     'xdgcpp',
