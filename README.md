@@ -25,6 +25,8 @@ macOS and systemd-based implementations require AC power as an absolute conditio
 It also does not depend on any init system, so it works in any environment.
 
 ## Installation
+To install, you need 'xmake', 'cmake', 'ninja', and 'gcc'.
+
 ### For systemd users
 ```sh
 chmod +x service/systemd/install.sh
