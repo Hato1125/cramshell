@@ -24,6 +24,32 @@ Clamshell mode allows you to work with your laptop lid closed, using an external
 macOS and systemd-based implementations require AC power as an absolute condition for clamshell mode, but clamshell does not.
 It also does not depend on any init system, so it works in any environment.
 
+## Installation
+### For systemd users
+```sh
+chmod +x service/systemd/install.sh
+service/systemd/install.sh
+```
+After installation, enable clamshell with the following commands:
+```sh
+sudo systemctl restart systemd-logind
+sudo systemctl enable --now clamshell
+```
+
+### For OpenRC users
+```sh
+chmod +x service/openrc/install.sh
+service/openrc/install.sh
+```
+After installation, enable clamshell with the following commands:
+```sh
+sudo rc-update add clamshell default
+sudo rc-service clamshell start
+```
+
+### Other init systems
+Contributions are welcome ;)
+
 ## Configuration
 The configuration file is in TOML format and is loaded in the following order:
 `~/.config/clamshell/config.conf` → `/etc/clamshell/config.conf`
