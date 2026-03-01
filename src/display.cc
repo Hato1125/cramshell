@@ -4,11 +4,15 @@
 
 #include "display.hh"
 
+namespace {
+  constexpr const char* display_dir = "/sys/class/drm/";
+}
+
 namespace clamshell {
   int get_display_count() noexcept {
     int count = 0;
 
-    for (const auto& file : std::filesystem::directory_iterator("/sys/class/drm/")) {
+    for (const auto& file : std::filesystem::directory_iterator(display_dir)) {
       const bool is_card = file
         .path()
         .filename()

@@ -5,28 +5,34 @@
 #include "lid.hh"
 
 namespace {
-  constexpr const char* lid_path = "/proc/acpi/button/lid/LID/state";
+  constexpr const char* lid_dir = "/proc/acpi/button/lid";
+
+  std::ifstream lid;
 }
 
 namespace clamshell {
   bool has_lid() noexcept {
-    return std::filesystem::exists(lid_path);
+    for (const auto& file : std::filesystem::directory_iterator(lid_dir)) {
+      lid = std::ifstream(file.path() / "state");
+
+      if (lid.is_open()) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   bool is_open_lid() noexcept {
-    static std::ifstream lid(lid_path);
-
     if (lid.is_open()) {
       lid.clear();
       lid.seekg(0);
       std::string str;
       std::getline(lid, str);
 
-      if (str.contains("closed")) {
-        return false;
-      }
+      return !str.contains("closed");
     }
 
-    return true;
+    return false;
   }
 }
