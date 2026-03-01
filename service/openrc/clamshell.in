@@ -1,0 +1,20 @@
+#!/sbin/openrc-run
+
+description="Clamshell mode suspend daemon"
+
+depend() {
+  after xdm
+}
+
+start() {
+  ebegin "Starting clamshell"
+  start-stop-daemon --start --exec /usr/bin/clamshell \
+    --background --make-pidfile --pidfile /run/clamshell.pid
+  eend $?
+}
+
+stop() {
+  ebegin "Stopping clamshell"
+  start-stop-daemon --stop --pidfile /run/clamshell.pid
+  eend $?
+}
