@@ -1,4 +1,0 @@
-type = process
-command = /usr/bin/clamshell
-depends-on = loginready
-restart = true
