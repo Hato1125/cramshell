@@ -1,3 +1,4 @@
+#include <array>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -107,29 +108,34 @@ namespace {
   void freeze() noexcept {
     CLAMSHELL_TRACE("execute suspend with \033[1mfreeze\033[22m");
     std::ofstream state(power_state_path);
-    if (state.is_open()) {
-      state << "freeze";
+    state << "freeze";
+    if (!state.good()) {
+      CLAMSHELL_ERROR("failed to write to \"{}\" for freeze suspend", power_state_path);
     }
   }
 
   void suspend_to_ram() noexcept {
-    CLAMSHELL_TRACE("execute suspend with \033[1msuspend to ram\033[22m");
+    CLAMSHELL_TRACE("execute suspend with suspend to ram");
     std::ofstream mem(mem_power_state_path);
-    if (mem.is_open()) {
-      mem << "deep";
+    mem << "deep";
+    if (!mem.good()) {
+      CLAMSHELL_ERROR("failed to write to \"{}\" for suspend to RAM", mem_power_state_path);
+      return;
     }
 
     std::ofstream state(power_state_path);
-    if (state.is_open()) {
-      state << "mem";
+    state << "mem";
+    if (!state.good()) {
+      CLAMSHELL_ERROR("failed to write to \"{}\" for suspend to RAM", power_state_path);
     }
   }
 
   void suspend_to_disk() noexcept {
     CLAMSHELL_TRACE("execute suspend with \033[1msuspend to disk\033[22m");
     std::ofstream state(power_state_path);
-    if (state.is_open()) {
-      state << "disk";
+    state << "disk";
+    if (!state.good()) {
+      CLAMSHELL_ERROR("Failed to write to \"{}\" for suspend to disk", power_state_path);
     }
   }
 
@@ -138,17 +144,22 @@ namespace {
       case config::nvidia_method::official_script:
         if (config::suspend_mode_type == config::suspend_mode::suspend_to_disk) {
           CLAMSHELL_TRACE("execute nvidia suspend with \033[1mhibernate\033[22m");
-          std::system(nvidia_hibernate_cmd);
+          if (std::system(nvidia_hibernate_cmd) != 0) {
+            CLAMSHELL_ERROR("failed to execute nvidia hibernate");
+          }
         } else {
           CLAMSHELL_TRACE("execute nvidia suspend with \033[1msuspend\033[22m");
-          std::system(nvidia_suspend_cmd);
+          if (std::system(nvidia_suspend_cmd) != 0) {
+            CLAMSHELL_ERROR("failed to execute nvidia suspend");
+          }
         }
         break;
       case config::nvidia_method::direct_proc:
         CLAMSHELL_TRACE("execute nvidia suspend with \033[1mdirect proc\033[22m");
         std::ofstream state(nvidia_suspend_path);
-        if (state.is_open()) {
-          state << "suspend";
+        state << "suspend";
+        if (!state.good()) {
+          CLAMSHELL_ERROR("failed to write to \"{}\" for nvidia suspend", nvidia_suspend_path);
         }
         break;
     }
@@ -159,17 +170,22 @@ namespace {
       case config::nvidia_method::official_script:
         if (config::suspend_mode_type == config::suspend_mode::suspend_to_disk) {
           CLAMSHELL_TRACE("execute nvidia resume with \033[1mthaw\033[22m");
-          std::system(nvidia_thaw_cmd);
+          if (std::system(nvidia_thaw_cmd) != 0) {
+            CLAMSHELL_ERROR("failed to execute nvidia thaw");
+          }
         } else {
           CLAMSHELL_TRACE("execute nvidia resume with \033[1mresume\033[22m");
-          std::system(nvidia_resume_cmd);
+          if (std::system(nvidia_resume_cmd) != 0) {
+            CLAMSHELL_ERROR("failed to execute nvidia resume");
+          }
         }
         break;
       case config::nvidia_method::direct_proc:
         CLAMSHELL_TRACE("execute nvidia resume with \033[1mdirect proc\033[22m");
         std::ofstream state(nvidia_suspend_path);
-        if (state.is_open()) {
-          state << "resume";
+        state << "resume";
+        if (!state.good()) {
+          CLAMSHELL_ERROR("failed to write to \"{}\" for nvidia resume", nvidia_suspend_path);
         }
         break;
     }
@@ -241,31 +257,11 @@ namespace clamshell {
 
     using mode = config::suspend_mode;
 
-    static constexpr mode freeze_fallback[3] {
-      mode::freeze,
-      mode::suspend_to_disk,
-      mode::suspend_to_ram,
-    };
-
-    static constexpr mode ram_fallback[3] {
-      mode::suspend_to_ram,
-      mode::suspend_to_disk,
-      mode::freeze,
-    };
-
-    static constexpr mode disk_fallback[3] {
-      mode::suspend_to_disk,
-      mode::suspend_to_ram,
-      mode::freeze,
-    };
-
-    const mode* order = nullptr;
-
-    switch (config::suspend_mode_type) {
-      case mode::freeze: order = freeze_fallback; break;
-      case mode::suspend_to_ram: order = ram_fallback; break;
-      case mode::suspend_to_disk: order = disk_fallback; break;
-    }
+    static constexpr std::array<std::array<mode, 3>, 3> fallbacks {{
+      { mode::freeze, mode::suspend_to_disk, mode::suspend_to_ram },
+      { mode::suspend_to_ram, mode::suspend_to_disk, mode::freeze },
+      { mode::suspend_to_disk, mode::suspend_to_ram, mode::freeze },
+    }};
 
     const auto is_available = [&sleep_caps, &mem_caps](mode m) -> bool {
       switch (m) {
@@ -276,11 +272,24 @@ namespace clamshell {
       return false;
     };
 
-    for (int i = 0; i < 3; ++i) {
-      if (is_available(order[i])) {
-        use_suspend_mode = order[i];
-        return true;
+    const auto& order = fallbacks[
+      static_cast<std::size_t>(config::suspend_mode_type)
+    ];
+
+    const auto it = std::ranges::find_if(order, is_available);
+
+    if (it != order.end()) {
+      use_suspend_mode = *it;
+
+      if (*it != config::suspend_mode_type) {
+        CLAMSHELL_WARN(
+          "suspend mode \"{}\" is not available, falling back to \"{}\"",
+          config::to_string(config::suspend_mode_type),
+          config::to_string(*it)
+        );
       }
+
+      return true;
     }
 
     return false;

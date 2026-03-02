@@ -29,15 +29,13 @@ namespace detail {
 #ifdef RELEASE
   #define CLAMSHELL_INFO(fmt, ...)
   #define CLAMSHELL_TRACE(fmt, ...)
-  #define CLAMSHELL_WARN(fmt, ...)
-  #define CLAMSHELL_ERROR(fmt, ...)
 #else
   #define CLAMSHELL_INFO(fmt, ...) detail::log("\x1b[32m", "info", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
   #define CLAMSHELL_TRACE(fmt, ...) detail::log("\x1b[34m", "trace", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
-  #define CLAMSHELL_WARN(fmt, ...) detail::log("\x1b[33m", "warn", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
-  #define CLAMSHELL_ERROR(fmt, ...) detail::log("\x1b[31m", "error", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
 #endif
 
+#define CLAMSHELL_WARN(fmt, ...) detail::log("\x1b[33m", "warn", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
+#define CLAMSHELL_ERROR(fmt, ...) detail::log("\x1b[31m", "error", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
 #define CLAMSHELL_FATAL(fmt, ...) detail::log("\x1b[31m", "fatal", std::source_location::current(), fmt __VA_OPT__(, ) __VA_ARGS__)
 
 #endif

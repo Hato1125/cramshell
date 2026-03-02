@@ -5,6 +5,7 @@
 #include <toml++/toml.hpp>
 #include <xdgcpp/xdg.h>
 
+#include "log.hh"
 #include "config.hh"
 
 namespace {
@@ -40,6 +41,8 @@ namespace {
       suspend_mode_type = parse_suspend_mode(
         table["suspend_mode_type"].value_or(""sv)
       );
+    } else {
+      CLAMSHELL_WARN("failed to read config file \"{}\"", path);
     }
   }
 }

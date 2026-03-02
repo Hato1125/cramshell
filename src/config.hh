@@ -2,6 +2,7 @@
 #define _CLAMSHELL_CONFIG_HH
 
 #include <cstdint>
+#include <string_view>
 
 namespace clamshell::config {
   enum class nvidia_method : std::uint8_t {
@@ -20,6 +21,15 @@ namespace clamshell::config {
   inline suspend_mode suspend_mode_type = suspend_mode::freeze;
 
   void load() noexcept;
+
+  constexpr std::string_view to_string(suspend_mode m) noexcept {
+    switch (m) {
+      case suspend_mode::freeze: return "freeze";
+      case suspend_mode::suspend_to_ram: return "suspend_to_ram";
+      case suspend_mode::suspend_to_disk: return "suspend_to_disk";
+    }
+    return "";
+  }
 }
 
 #endif
