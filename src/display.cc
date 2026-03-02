@@ -12,6 +12,10 @@ namespace clamshell {
   int get_display_count() noexcept {
     int count = 0;
 
+    if (!std::filesystem::exists(display_dir)) {
+      return count;
+    }
+
     for (const auto& file : std::filesystem::directory_iterator(display_dir)) {
       const bool is_card = file
         .path()

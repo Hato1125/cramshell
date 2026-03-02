@@ -12,6 +12,10 @@ namespace {
 
 namespace clamshell {
   bool has_lid() noexcept {
+    if (!std::filesystem::exists(lid_dir)) {
+      return false;
+    }
+
     for (const auto& file : std::filesystem::directory_iterator(lid_dir)) {
       lid = std::ifstream(file.path() / "state");
 
