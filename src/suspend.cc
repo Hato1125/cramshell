@@ -17,6 +17,13 @@ namespace {
   constexpr const char* cgroup_freeze_path = "/sys/fs/cgroup/user.slice/cgroup.freeze";
   constexpr const char* cgroup_proc_path = "/sys/fs/cgroup/system.slice/cgroup.procs";
 
+  #define NVIDIA_SLEEP_PATH "/usr/bin/nvidia-sleep.sh "
+
+  constexpr const char* nvidia_hibernate_cmd = NVIDIA_SLEEP_PATH "hibernate";
+  constexpr const char* nvidia_suspend_cmd = NVIDIA_SLEEP_PATH "suspend";
+  constexpr const char* nvidia_thaw_cmd = NVIDIA_SLEEP_PATH "thaw";
+  constexpr const char* nvidia_resume_cmd = NVIDIA_SLEEP_PATH "resume";
+
   config::suspend_mode use_suspend_mode;
 
   struct sleep_caps {
@@ -131,10 +138,10 @@ namespace {
       case config::nvidia_method::official_script:
         if (config::suspend_mode_type == config::suspend_mode::suspend_to_disk) {
           CLAMSHELL_TRACE("execute nvidia suspend with \033[1mhibernate\033[22m");
-          std::system("/usr/bin/nvidia-sleep.sh hibernate");
+          std::system(nvidia_hibernate_cmd);
         } else {
           CLAMSHELL_TRACE("execute nvidia suspend with \033[1msuspend\033[22m");
-          std::system("/usr/bin/nvidia-sleep.sh suspend");
+          std::system(nvidia_suspend_cmd);
         }
         break;
       case config::nvidia_method::direct_proc:
@@ -152,10 +159,10 @@ namespace {
       case config::nvidia_method::official_script:
         if (config::suspend_mode_type == config::suspend_mode::suspend_to_disk) {
           CLAMSHELL_TRACE("execute nvidia resume with \033[1mthaw\033[22m");
-          std::system("/usr/bin/nvidia-sleep.sh thaw");
+          std::system(nvidia_thaw_cmd);
         } else {
           CLAMSHELL_TRACE("execute nvidia resume with \033[1mresume\033[22m");
-          std::system("/usr/bin/nvidia-sleep.sh resume");
+          std::system(nvidia_resume_cmd);
         }
         break;
       case config::nvidia_method::direct_proc:
