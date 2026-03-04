@@ -5,7 +5,7 @@
 
 namespace clamshell {
   bool has_lid() noexcept;
-  void poll_lid(std::function<void(bool closed)> hook) noexcept;
+  void poll_lid(std::function<void()> hook) noexcept;
 }
 
 #endif

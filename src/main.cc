@@ -17,7 +17,7 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  clamshell::poll_lid([](bool closed) {
+  clamshell::poll_lid([]() {
     if (clamshell::get_display_count() == 1) {
       // Program execution stops here during suspend, preventing multiple
       // suspend requests while the system is already suspended.

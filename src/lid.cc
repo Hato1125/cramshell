@@ -46,7 +46,7 @@ namespace clamshell {
     return false;
   }
 
-  void poll_lid(std::function<void(bool closed)> hook) noexcept {
+  void poll_lid(std::function<void()> hook) noexcept {
     int epfd = epoll_create1(0);
     if (epfd < 0) {
       CLAMSHELL_FATAL("failed to create epoll instance: {}", strerror(errno));
@@ -87,7 +87,9 @@ namespace clamshell {
       );
 
       if (e.type == EV_SW && e.code == SW_LID) {
-        hook(e.value);
+        if (e.value) {
+          hook();
+        }
       }
     }
   }
