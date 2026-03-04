@@ -1,12 +1,8 @@
-#include <thread>
-
 #include "log.hh"
 #include "lid.hh"
 #include "suspend.hh"
 #include "display.hh"
 #include "config.hh"
-
-using namespace std::chrono_literals;
 
 int main() {
   clamshell::config::load();
@@ -21,19 +17,13 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  while (true) {
-    CLAMSHELL_INFO("display count: \033[1m{}\033[22m", clamshell::get_display_count());
-    CLAMSHELL_INFO("lid open: \033[1m{}\033[22m", clamshell::is_open_lid());
+  clamshell::poll_lid([](bool closed) {
     if (clamshell::get_display_count() == 1) {
-      if (!clamshell::is_open_lid()) {
-        // Program execution stops here during suspend, preventing multiple
-        // suspend requests while the system is already suspended.
-        clamshell::suspend();
-      }
+      // Program execution stops here during suspend, preventing multiple
+      // suspend requests while the system is already suspended.
+      clamshell::suspend();
     }
-
-    std::this_thread::sleep_for(1s);
-  }
+  });
 
   return EXIT_SUCCESS;
 }
