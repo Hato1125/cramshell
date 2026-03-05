@@ -61,7 +61,7 @@ namespace clamshell {
       display_fd.raw = *display;
 
       epoll_event event {
-        .events = EPOLLIN | EPOLLET,
+        .events = EPOLLIN,
         .data { .fd = *display }
       };
 
