@@ -1,11 +1,11 @@
 #ifndef _CLAMSHELL_LID_HH
 #define _CLAMSHELL_LID_HH
 
-#include <functional>
+#include <optional>
 
 namespace clamshell {
-  bool has_lid() noexcept;
-  void poll_lid(std::function<void()> hook) noexcept;
+  std::optional<int> get_lid_fd() noexcept;
+  bool get_lid_closed(int fd) noexcept;
 }
 
 #endif
