@@ -102,12 +102,25 @@ namespace clamshell {
 
         if (e.type == EV_SW && e.code == SW_LID) {
           closed = e.value;
+          hook(closed, displays);
         }
       } else if (events[0].data.fd == display_fd) {
-        displays = get_display_count();
-      }
+        char buffer[4096];
 
-      hook(closed, displays);
+        const auto length = read(
+          display_fd,
+          buffer,
+          sizeof(buffer)
+        );
+
+        if (length > 0) {
+          if (std::string_view(buffer, length).contains("SUBSYSTEM=drm")) {
+            displays = get_display_count();
+            CLAMSHELL_INFO("display hotplug: displays = {}", displays);
+            hook(closed, displays);
+          }
+        }
+      }
     }
   }
 }
