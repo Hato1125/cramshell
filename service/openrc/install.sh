@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if ! xmake; then
+if ! xmake f -m release; then
   exit 1
 fi
 
