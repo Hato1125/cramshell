@@ -1,9 +1,21 @@
+#include <print>
+
+#include "def.hh"
 #include "log.hh"
 #include "poll.hh"
 #include "suspend.hh"
 #include "config.hh"
 
 int main() {
+  std::println("START CLAMSHELL DAEMON");
+  std::println(
+    "{} MODE: v{}.{}.{}",
+    IF_DEBUG("DEBUG") IF_RELEASE("RELEASE"),
+    clamshell::major,
+    clamshell::minor,
+    clamshell::patch
+  );
+
   clamshell::config::load();
 
   if (!clamshell::check_suspend_caps()) {
