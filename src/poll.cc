@@ -14,25 +14,6 @@
 #include "display.hh"
 #include "poll.hh"
 
-namespace {
-  struct unique_fd {
-    int fd = -1;
-
-    unique_fd(int fd) noexcept : fd(fd) {}
-
-    ~unique_fd() noexcept {
-      if (fd >= 0) {
-        close(fd);
-      }
-    }
-
-    operator int() const noexcept { return fd; }
-    operator bool() const noexcept { return fd >= 0; }
-  };
-
-  unique_fd make_fd(int raw) noexcept { return unique_fd(raw); }
-}
-
 namespace clamshell {
   bool poll(
     std::function<void(bool closed, int displays)> hook
