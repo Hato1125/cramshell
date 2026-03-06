@@ -14,7 +14,7 @@ namespace {
 }
 
 namespace clamshell {
-  std::optional<int> get_display_fd() noexcept {
+  std::optional<unique_fd> get_display_fd() noexcept {
     int fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_KOBJECT_UEVENT);
 
     if (fd >= 0) {

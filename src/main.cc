@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <print>
 
 #include "def.hh"
@@ -23,13 +24,13 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  clamshell::poll([](bool closed, int displays) {
+  return clamshell::poll([](bool closed, int displays) {
     if (closed && displays == 1) {
       // Program execution stops here during suspend, preventing multiple
       // suspend requests while the system is already suspended.
       clamshell::suspend();
     }
-  });
-
-  return EXIT_SUCCESS;
+  })
+    ? EXIT_SUCCESS
+    : EXIT_FAILURE;
 }

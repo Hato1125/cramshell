@@ -25,7 +25,7 @@ namespace {
 }
 
 namespace clamshell {
-    std::optional<int> get_lid_fd() noexcept {
+  std::optional<unique_fd> get_lid_fd() noexcept {
     for (const auto& file : std::filesystem::directory_iterator("/dev/input/")) {
       if (int fd = open(file.path().c_str(), O_RDONLY); fd >= 0) {
         if (has_sw_event(fd) && has_lid_event(fd)) {
@@ -39,7 +39,7 @@ namespace clamshell {
     return std::nullopt;
   }
 
-  bool get_lid_closed(int fd) noexcept {
+  bool get_lid_closed(unique_fd& fd) noexcept {
     std::bitset<SW_MAX + 1> bit;
     return ioctl(fd, EVIOCGSW(sizeof(bit)), &bit) >= 0 && bit[SW_LID];
   }

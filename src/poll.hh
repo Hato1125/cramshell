@@ -4,7 +4,7 @@
 #include <functional>
 
 namespace clamshell {
-  void poll(
+  bool poll(
     std::function<void(bool closed, int displays)> hook
   ) noexcept;
 }

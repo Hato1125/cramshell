@@ -3,8 +3,10 @@
 
 #include <optional>
 
+#include "utils.hh"
+
 namespace clamshell {
-  std::optional<int> get_display_fd() noexcept;
+  std::optional<unique_fd> get_display_fd() noexcept;
   int get_display_count() noexcept;
 }
 

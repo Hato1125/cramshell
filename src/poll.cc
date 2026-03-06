@@ -15,33 +15,36 @@
 #include "poll.hh"
 
 namespace {
-  struct fd_guard {
-    int raw = -1;
+  struct unique_fd {
+    int fd = -1;
 
-    ~fd_guard() noexcept {
-      if (raw >= 0) {
-        close(raw);
+    unique_fd(int fd) noexcept : fd(fd) {}
+
+    ~unique_fd() noexcept {
+      if (fd >= 0) {
+        close(fd);
       }
     }
 
-    operator int() const noexcept { return raw; }
+    operator int() const noexcept { return fd; }
+    operator bool() const noexcept { return fd >= 0; }
   };
+
+  unique_fd make_fd(int raw) noexcept { return unique_fd(raw); }
 }
 
 namespace clamshell {
-  void poll(
+  bool poll(
     std::function<void(bool closed, int displays)> hook
   ) noexcept {
-    int epfd = epoll_create1(0);
-    if (epfd < 0) {
+    auto epfd = make_fd(epoll_create1(0));
+    if (!epfd) {
       CLAMSHELL_FATAL("failed to create epoll instance: {}", strerror(errno));
-      return;
+      return false;
     }
 
-    fd_guard lid_fd;
-    if (auto lid = get_lid_fd(); lid) {
-      lid_fd.raw = *lid;
-
+    auto lid = get_lid_fd();
+    if (lid) {
       epoll_event event {
         .events = EPOLLIN,
         .data { .fd = *lid }
@@ -49,17 +52,15 @@ namespace clamshell {
 
       if (epoll_ctl(epfd, EPOLL_CTL_ADD, *lid, &event) < 0) {
         CLAMSHELL_FATAL("cannot monitor lid: epoll_ctl failed ({})", strerror(errno));
-        return;
+        return false;
       }
     } else {
       CLAMSHELL_FATAL("this device does not appear to have a lid");
-      return;
+      return false;
     }
 
-    fd_guard display_fd;
-    if (auto display = get_display_fd(); display) {
-      display_fd.raw = *display;
-
+    auto display = get_display_fd();
+    if (display) {
       epoll_event event {
         .events = EPOLLIN,
         .data { .fd = *display }
@@ -67,30 +68,32 @@ namespace clamshell {
 
       if (epoll_ctl(epfd, EPOLL_CTL_ADD, *display, &event) < 0) {
         CLAMSHELL_FATAL("cannot monitor display hotplug: epoll_ctl failed ({})", strerror(errno));
-        return;
+        return false;
       }
     } else {
       CLAMSHELL_FATAL("cannot monitor display hotplug: failed to open netlink socket");
-      return;
+      return false;
     }
 
     epoll_event events[1];
 
-    bool closed = get_lid_closed(lid_fd);
+    bool closed = get_lid_closed(*lid);
     int displays = get_display_count();
+
+    hook(closed, displays);
 
     while (true) {
       if (epoll_wait(epfd, events, 1, -1) < 0) {
         CLAMSHELL_FATAL("epoll_wait failed: {}", strerror(errno));
-        return;
+        return false;
       }
 
-      if (events[0].data.fd == lid_fd) {
+      if (events[0].data.fd == *lid) {
         input_event e;
 
         if (read(events[0].data.fd, &e, sizeof(e)) < 0) {
           CLAMSHELL_FATAL("failed to read lid event: {}", strerror(errno));
-          return;
+          return false;
         }
 
         CLAMSHELL_INFO(
@@ -104,11 +107,11 @@ namespace clamshell {
           closed = e.value;
           hook(closed, displays);
         }
-      } else if (events[0].data.fd == display_fd) {
+      } else if (events[0].data.fd == *display) {
         char buffer[4096];
 
         const auto length = read(
-          display_fd,
+          *display,
           buffer,
           sizeof(buffer)
         );
@@ -122,5 +125,7 @@ namespace clamshell {
         }
       }
     }
+
+    return true;
   }
 }

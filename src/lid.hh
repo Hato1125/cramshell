@@ -3,9 +3,11 @@
 
 #include <optional>
 
+#include "utils.hh"
+
 namespace clamshell {
-  std::optional<int> get_lid_fd() noexcept;
-  bool get_lid_closed(int fd) noexcept;
+  std::optional<unique_fd> get_lid_fd() noexcept;
+  bool get_lid_closed(unique_fd& fd) noexcept;
 }
 
 #endif
