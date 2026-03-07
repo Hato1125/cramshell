@@ -37,6 +37,8 @@ After installation, enable clamshell with the following commands:
 sudo systemctl restart systemd-logind
 sudo systemctl enable --now clamshell
 ```
+A configuration file that disables systemd's control of the lid will be created at `/etc/systemd/logind.conf.d/clamshell.conf`.
+To uninstall clamshell, delete `/etc/systemd/logind.conf.d/clamshell.conf` to restore systemd's lid control.
 
 ### For OpenRC users
 ```sh
