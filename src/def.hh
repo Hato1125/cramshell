@@ -7,12 +7,4 @@ namespace clamshell {
   constexpr int patch = 0;
 }
 
-#ifdef DEBUG
-  #define IF_RELEASE(code)
-  #define IF_DEBUG(code) code
-#else
-  #define IF_DEBUG(code)
-  #define IF_RELEASE(code) code
-#endif
-
 #endif

@@ -11,7 +11,11 @@ int main() {
   std::println("START CLAMSHELL DAEMON");
   std::println(
     "{} MODE: v{}.{}.{}",
-    IF_DEBUG("DEBUG") IF_RELEASE("RELEASE"),
+#ifdef DEBUG
+    "DEBUG",
+#else
+    "RELEASE",
+#endif
     clamshell::major,
     clamshell::minor,
     clamshell::patch
