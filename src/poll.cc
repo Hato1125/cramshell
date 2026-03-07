@@ -1,8 +1,5 @@
 #include <cstring>
 
-#include <fcntl.h>
-#include <unistd.h>
-
 #include <linux/input.h>
 #include <linux/input-event-codes.h>
 
@@ -103,9 +100,9 @@ namespace clamshell {
           if (uevent.contains("SUBSYSTEM=drm") && uevent.contains("HOTPLUG=1")) {
 #ifdef DEBUG
             if (get_display_count() > displays) {
-              CLAMSHELL_TRACE("display disconnected");
-            } else {
               CLAMSHELL_TRACE("display connected");
+            } else {
+              CLAMSHELL_TRACE("display disconnected");
             }
 #endif
 
