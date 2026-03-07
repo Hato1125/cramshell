@@ -37,8 +37,9 @@ namespace clamshell {
     int count = 0;
 
     for (const auto& file : std::filesystem::directory_iterator(display_dir)) {
-      const bool is_card = file
-        .path()
+      const auto path = file.path();
+
+      const bool is_card = path
         .filename()
         .string()
         .starts_with("card");
@@ -47,7 +48,7 @@ namespace clamshell {
         continue;
       }
 
-      std::ifstream card((file.path() / "status"));
+      std::ifstream card((path / "status"));
 
       if (card.is_open()) {
         std::string status;

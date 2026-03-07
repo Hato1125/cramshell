@@ -1,18 +1,15 @@
 #include <cstring>
 
-#include <fcntl.h>
-#include <unistd.h>
-
 #include <linux/input.h>
 #include <linux/input-event-codes.h>
 
 #include <sys/ioctl.h>
 #include <sys/epoll.h>
 
+#include "poll.hh"
 #include "log.hh"
 #include "lid.hh"
 #include "display.hh"
-#include "poll.hh"
 
 namespace clamshell {
   bool poll(
@@ -98,9 +95,19 @@ namespace clamshell {
         );
 
         if (length > 0) {
-          if (std::string_view(buffer, length).contains("SUBSYSTEM=drm")) {
+          const std::string_view uevent(buffer, length);
+
+          if (uevent.contains("SUBSYSTEM=drm") && uevent.contains("HOTPLUG=1")) {
+#ifdef DEBUG
+            if (get_display_count() > displays) {
+              CLAMSHELL_TRACE("display connected");
+            } else {
+              CLAMSHELL_TRACE("display disconnected");
+            }
+#endif
+
             displays = get_display_count();
-            CLAMSHELL_INFO("display hotplug: displays = {}", displays);
+
             hook(closed, displays);
           }
         }
