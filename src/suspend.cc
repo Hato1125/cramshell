@@ -7,6 +7,7 @@
 
 #include "suspend.hh"
 #include "config.hh"
+#include "nvidia.hh"
 #include "log.hh"
 
 namespace {
@@ -14,16 +15,8 @@ namespace {
 
   constexpr const char* power_state_path = "/sys/power/state";
   constexpr const char* mem_power_state_path = "/sys/power/mem_sleep";
-  constexpr const char* nvidia_suspend_path = "/proc/driver/nvidia/suspend";
   constexpr const char* cgroup_freeze_path = "/sys/fs/cgroup/user.slice/cgroup.freeze";
   constexpr const char* cgroup_proc_path = "/sys/fs/cgroup/system.slice/cgroup.procs";
-
-  #define NVIDIA_SLEEP_PATH "/usr/bin/nvidia-sleep.sh "
-
-  constexpr const char* nvidia_hibernate_cmd = NVIDIA_SLEEP_PATH "hibernate";
-  constexpr const char* nvidia_suspend_cmd = NVIDIA_SLEEP_PATH "suspend";
-  constexpr const char* nvidia_thaw_cmd = NVIDIA_SLEEP_PATH "thaw";
-  constexpr const char* nvidia_resume_cmd = NVIDIA_SLEEP_PATH "resume";
 
   config::suspend_mode use_suspend_mode;
 
@@ -139,58 +132,6 @@ namespace {
     }
   }
 
-  void write_nvidia_suspend() noexcept {
-    switch (config::nvidia_method_type) {
-      case config::nvidia_method::official_script:
-        if (config::suspend_mode_type == config::suspend_mode::suspend_to_disk) {
-          CLAMSHELL_TRACE("execute nvidia suspend with \033[1mhibernate\033[22m");
-          if (std::system(nvidia_hibernate_cmd) != 0) {
-            CLAMSHELL_ERROR("failed to execute nvidia hibernate");
-          }
-        } else {
-          CLAMSHELL_TRACE("execute nvidia suspend with \033[1msuspend\033[22m");
-          if (std::system(nvidia_suspend_cmd) != 0) {
-            CLAMSHELL_ERROR("failed to execute nvidia suspend");
-          }
-        }
-        break;
-      case config::nvidia_method::direct_proc:
-        CLAMSHELL_TRACE("execute nvidia suspend with \033[1mdirect proc\033[22m");
-        std::ofstream state(nvidia_suspend_path);
-        state << "suspend";
-        if (!state.good()) {
-          CLAMSHELL_ERROR("failed to write to \"{}\" for nvidia suspend", nvidia_suspend_path);
-        }
-        break;
-    }
-  }
-
-  void write_nvidia_resume() noexcept {
-    switch (config::nvidia_method_type) {
-      case config::nvidia_method::official_script:
-        if (config::suspend_mode_type == config::suspend_mode::suspend_to_disk) {
-          CLAMSHELL_TRACE("execute nvidia resume with \033[1mthaw\033[22m");
-          if (std::system(nvidia_thaw_cmd) != 0) {
-            CLAMSHELL_ERROR("failed to execute nvidia thaw");
-          }
-        } else {
-          CLAMSHELL_TRACE("execute nvidia resume with \033[1mresume\033[22m");
-          if (std::system(nvidia_resume_cmd) != 0) {
-            CLAMSHELL_ERROR("failed to execute nvidia resume");
-          }
-        }
-        break;
-      case config::nvidia_method::direct_proc:
-        CLAMSHELL_TRACE("execute nvidia resume with \033[1mdirect proc\033[22m");
-        std::ofstream state(nvidia_suspend_path);
-        state << "resume";
-        if (!state.good()) {
-          CLAMSHELL_ERROR("failed to write to \"{}\" for nvidia resume", nvidia_suspend_path);
-        }
-        break;
-    }
-  }
-
   bool freeze_user_processes() noexcept {
     CLAMSHELL_TRACE("freeze user processes");
     std::ofstream file(cgroup_freeze_path);
@@ -297,7 +238,7 @@ namespace clamshell {
 
   void suspend() noexcept {
     sync();
-    write_nvidia_suspend();
+    nvidia::suspend();
 
     if (move_self_to_system_slice() && freeze_user_processes()) {
       switch (use_suspend_mode) {
@@ -314,6 +255,6 @@ namespace clamshell {
     }
 
     unfreeze_user_processes();
-    write_nvidia_resume();
+    nvidia::resume();
   }
 }
