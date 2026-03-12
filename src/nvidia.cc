@@ -3,7 +3,6 @@
 
 #include "log.hh"
 #include "config.hh"
-#include "nvidia.hh"
 
 namespace {
   #define SCRIPT_PATH "/usr/bin/nvidia-sleep.sh "
@@ -16,10 +15,10 @@ namespace {
 }
 
 namespace clamshell::nvidia {
-  void suspend() noexcept {
+  void suspend(config::suspend_mode mode) noexcept {
     switch (config::nvidia_method_type) {
       case config::nvidia_method::official_script:
-        if (config::suspend_mode_type == config::suspend_mode::suspend_to_disk) {
+        if (mode == config::suspend_mode::suspend_to_disk) {
           CLAMSHELL_TRACE("execute nvidia suspend with \033[1mhibernate\033[22m");
           if (std::system(hibernate_cmd) != 0) {
             CLAMSHELL_ERROR("failed to execute nvidia hibernate");
@@ -41,10 +40,10 @@ namespace clamshell::nvidia {
         break;
     }
   }
-  void resume() noexcept {
+  void resume(config::suspend_mode mode) noexcept {
     switch (config::nvidia_method_type) {
       case config::nvidia_method::official_script:
-        if (config::suspend_mode_type == config::suspend_mode::suspend_to_disk) {
+        if (mode == config::suspend_mode::suspend_to_disk) {
           CLAMSHELL_TRACE("execute nvidia resume with \033[1mthaw\033[22m");
           if (std::system(thaw_cmd) != 0) {
             CLAMSHELL_ERROR("failed to execute nvidia thaw");

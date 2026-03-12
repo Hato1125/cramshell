@@ -238,7 +238,7 @@ namespace clamshell {
 
   void suspend() noexcept {
     sync();
-    nvidia::suspend();
+    nvidia::suspend(use_suspend_mode);
 
     if (move_self_to_system_slice() && freeze_user_processes()) {
       switch (use_suspend_mode) {
@@ -255,6 +255,6 @@ namespace clamshell {
     }
 
     unfreeze_user_processes();
-    nvidia::resume();
+    nvidia::resume(use_suspend_mode);
   }
 }
