@@ -28,13 +28,15 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  return clamshell::poll([](bool closed, int displays) {
+  constexpr auto polling = [](bool closed, int displays) {
     if (closed && displays == 1) {
       // Program execution stops here during suspend, preventing multiple
       // suspend requests while the system is already suspended.
       clamshell::suspend();
     }
-  })
+  };
+
+  return clamshell::poll<polling>()
     ? EXIT_SUCCESS
     : EXIT_FAILURE;
 }

@@ -41,7 +41,7 @@ namespace clamshell {
 
       const bool is_card = path
         .filename()
-        .string()
+        .native()
         .starts_with("card");
 
       if (!is_card) {
