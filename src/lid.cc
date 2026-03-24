@@ -24,23 +24,21 @@ namespace {
   }
 }
 
-namespace clamshell {
-  std::optional<unique_fd> get_lid_fd() noexcept {
-    for (const auto& file : std::filesystem::directory_iterator("/dev/input/")) {
-      if (int fd = open(file.path().c_str(), O_RDONLY); fd >= 0) {
-        if (has_sw_event(fd) && has_lid_event(fd)) {
-          return fd;
-        }
-
-        close(fd);
+std::optional<utils::unique_fd> get_lid_fd() noexcept {
+  for (const auto& file : std::filesystem::directory_iterator("/dev/input/")) {
+    if (int fd = open(file.path().c_str(), O_RDONLY); fd >= 0) {
+      if (has_sw_event(fd) && has_lid_event(fd)) {
+        return fd;
       }
+
+      close(fd);
     }
-
-    return std::nullopt;
   }
 
-  bool get_lid_closed(unique_fd& fd) noexcept {
-    std::bitset<SW_MAX + 1> bit;
-    return ioctl(fd, EVIOCGSW(sizeof(bit)), &bit) >= 0 && bit[SW_LID];
-  }
+  return std::nullopt;
+}
+
+bool get_lid_closed(utils::unique_fd& fd) noexcept {
+  std::bitset<SW_MAX + 1> bit;
+  return ioctl(fd, EVIOCGSW(sizeof(bit)), &bit) >= 0 && bit[SW_LID];
 }

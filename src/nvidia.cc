@@ -14,7 +14,7 @@ namespace {
   constexpr const char* suspend_path = "/proc/driver/nvidia/suspend";
 }
 
-namespace clamshell::nvidia {
+namespace nvidia {
   void suspend(config::suspend_mode mode) noexcept {
     switch (config::nvidia_method_type) {
       case config::nvidia_method::official_script:

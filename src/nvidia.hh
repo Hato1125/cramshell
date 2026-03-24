@@ -3,7 +3,7 @@
 
 #include "config.hh"
 
-namespace clamshell::nvidia {
+namespace nvidia {
   void suspend(config::suspend_mode mode) noexcept;
   void resume(config::suspend_mode mode) noexcept;
 }

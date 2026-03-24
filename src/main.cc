@@ -21,9 +21,9 @@ int main() {
     clamshell::patch
   );
 
-  clamshell::config::load();
+  config::load();
 
-  if (!clamshell::check_suspend_caps()) {
+  if (!check_suspend_caps()) {
     CLAMSHELL_FATAL("no suspend available for this device");
     return EXIT_FAILURE;
   }
@@ -32,11 +32,11 @@ int main() {
     if (closed && displays == 1) {
       // Program execution stops here during suspend, preventing multiple
       // suspend requests while the system is already suspended.
-      clamshell::suspend();
+      suspend();
     }
   };
 
-  return clamshell::poll<polling>()
+  return poll<polling>()
     ? EXIT_SUCCESS
     : EXIT_FAILURE;
 }

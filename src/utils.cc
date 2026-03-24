@@ -2,7 +2,7 @@
 
 #include "utils.hh"
 
-namespace clamshell {
+namespace utils {
   unique_fd::unique_fd(int fd) noexcept : fd(fd) {}
   unique_fd::~unique_fd() noexcept {
     if (fd >= 0) {

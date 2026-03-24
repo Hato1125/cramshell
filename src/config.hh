@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string_view>
 
-namespace clamshell::config {
+namespace config {
   enum class nvidia_method : std::uint8_t {
     official_script,
     direct_proc,

@@ -5,9 +5,7 @@
 
 #include "utils.hh"
 
-namespace clamshell {
-  std::optional<unique_fd> get_display_fd() noexcept;
-  int get_display_count() noexcept;
-}
+std::optional<utils::unique_fd> get_display_fd() noexcept;
+int get_display_count() noexcept;
 
 #endif

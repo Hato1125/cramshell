@@ -3,7 +3,7 @@
 
 #include <unistd.h>
 
-namespace clamshell {
+namespace utils {
   struct unique_fd {
     int fd = -1;
 

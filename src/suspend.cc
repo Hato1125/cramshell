@@ -11,8 +11,6 @@
 #include "log.hh"
 
 namespace {
-  using namespace clamshell;
-
   constexpr const char* power_state_path = "/sys/power/state";
   constexpr const char* mem_power_state_path = "/sys/power/mem_sleep";
   constexpr const char* cgroup_freeze_path = "/sys/fs/cgroup/user.slice/cgroup.freeze";
@@ -160,101 +158,99 @@ namespace {
   }
 }
 
-namespace clamshell {
-  bool check_suspend_caps() noexcept {
-    sleep_caps sleep_caps{};
-    mem_sleep_caps mem_caps{};
+bool check_suspend_caps() noexcept {
+  sleep_caps sleep_caps{};
+  mem_sleep_caps mem_caps{};
 
-    get_sleep_cap(sleep_caps);
-    CLAMSHELL_INFO(
-      "sleep caps {{\n  freeze = \033[1m{}\033[22m\n  standby = \033[1m{}\033[22m\n  mem = \033[1m{}\033[22m\n  disk = \033[1m{}\033[22m\n}}",
-      sleep_caps.freeze ? "true" : "false",
-      sleep_caps.standby ? "true" : "false",
-      sleep_caps.mem ? "true" : "false",
-      sleep_caps.disk ? "true" : "false"
-    );
+  get_sleep_cap(sleep_caps);
+  CLAMSHELL_INFO(
+    "sleep caps {{\n  freeze = \033[1m{}\033[22m\n  standby = \033[1m{}\033[22m\n  mem = \033[1m{}\033[22m\n  disk = \033[1m{}\033[22m\n}}",
+    sleep_caps.freeze ? "true" : "false",
+    sleep_caps.standby ? "true" : "false",
+    sleep_caps.mem ? "true" : "false",
+    sleep_caps.disk ? "true" : "false"
+  );
 
-    get_mem_sleep_cap(mem_caps);
-    CLAMSHELL_INFO(
-      "mem_sleep_caps {{\n  s2idle = \033[1m{}\033[22m\n  shallow = \033[1m{}\033[22m\n  deep = \033[1m{}\033[22m\n}}",
-      mem_caps.s2idle ? "true" : "false",
-      mem_caps.shallow ? "true" : "false",
-      mem_caps.deep ? "true" : "false"
-    );
+  get_mem_sleep_cap(mem_caps);
+  CLAMSHELL_INFO(
+    "mem_sleep_caps {{\n  s2idle = \033[1m{}\033[22m\n  shallow = \033[1m{}\033[22m\n  deep = \033[1m{}\033[22m\n}}",
+    mem_caps.s2idle ? "true" : "false",
+    mem_caps.shallow ? "true" : "false",
+    mem_caps.deep ? "true" : "false"
+  );
 
-    if (!config::fallback) {
-      switch (config::suspend_mode_type) {
-        case config::suspend_mode::freeze:
-          use_suspend_mode = config::suspend_mode::freeze;
-          return is_freeze_available(sleep_caps);
-        case config::suspend_mode::suspend_to_ram:
-          use_suspend_mode = config::suspend_mode::suspend_to_ram;
-          return is_suspend_to_ram_available(sleep_caps, mem_caps);
-        case config::suspend_mode::suspend_to_disk:
-          use_suspend_mode = config::suspend_mode::suspend_to_disk;
-          return is_suspend_to_disk_available(sleep_caps);
-      }
+  if (!config::fallback) {
+    switch (config::suspend_mode_type) {
+      case config::suspend_mode::freeze:
+        use_suspend_mode = config::suspend_mode::freeze;
+        return is_freeze_available(sleep_caps);
+      case config::suspend_mode::suspend_to_ram:
+        use_suspend_mode = config::suspend_mode::suspend_to_ram;
+        return is_suspend_to_ram_available(sleep_caps, mem_caps);
+      case config::suspend_mode::suspend_to_disk:
+        use_suspend_mode = config::suspend_mode::suspend_to_disk;
+        return is_suspend_to_disk_available(sleep_caps);
     }
+  }
 
-    using mode = config::suspend_mode;
+  using mode = config::suspend_mode;
 
-    static constexpr std::array<std::array<mode, 3>, 3> fallbacks {{
-      { mode::freeze, mode::suspend_to_disk, mode::suspend_to_ram },
-      { mode::suspend_to_ram, mode::suspend_to_disk, mode::freeze },
-      { mode::suspend_to_disk, mode::suspend_to_ram, mode::freeze },
-    }};
+  static constexpr std::array<std::array<mode, 3>, 3> fallbacks {{
+    { mode::freeze, mode::suspend_to_disk, mode::suspend_to_ram },
+    { mode::suspend_to_ram, mode::suspend_to_disk, mode::freeze },
+    { mode::suspend_to_disk, mode::suspend_to_ram, mode::freeze },
+  }};
 
-    const auto is_available = [&sleep_caps, &mem_caps](mode m) -> bool {
-      switch (m) {
-        case mode::freeze: return is_freeze_available(sleep_caps);
-        case mode::suspend_to_ram: return is_suspend_to_ram_available(sleep_caps, mem_caps);
-        case mode::suspend_to_disk: return is_suspend_to_disk_available(sleep_caps);
-      }
-      return false;
-    };
-
-    const auto& order = fallbacks[
-      static_cast<std::size_t>(config::suspend_mode_type)
-    ];
-
-    const auto it = std::ranges::find_if(order, is_available);
-
-    if (it != order.end()) {
-      use_suspend_mode = *it;
-
-      if (*it != config::suspend_mode_type) {
-        CLAMSHELL_WARN(
-          "suspend mode \"{}\" is not available, falling back to \"{}\"",
-          config::to_string(config::suspend_mode_type),
-          config::to_string(*it)
-        );
-      }
-
-      return true;
+  const auto is_available = [&sleep_caps, &mem_caps](mode m) -> bool {
+    switch (m) {
+      case mode::freeze: return is_freeze_available(sleep_caps);
+      case mode::suspend_to_ram: return is_suspend_to_ram_available(sleep_caps, mem_caps);
+      case mode::suspend_to_disk: return is_suspend_to_disk_available(sleep_caps);
     }
-
     return false;
-  }
+  };
 
-  void suspend() noexcept {
-    sync();
-    nvidia::suspend(use_suspend_mode);
+  const auto& order = fallbacks[
+    static_cast<std::size_t>(config::suspend_mode_type)
+  ];
 
-    if (move_self_to_system_slice() && freeze_user_processes()) {
-      switch (use_suspend_mode) {
-        case config::suspend_mode::freeze:
-          freeze();
-          break;
-        case config::suspend_mode::suspend_to_ram:
-          suspend_to_ram();
-          break;
-        case config::suspend_mode::suspend_to_disk:
-          suspend_to_disk();
-          break;
-      }
+  const auto it = std::ranges::find_if(order, is_available);
+
+  if (it != order.end()) {
+    use_suspend_mode = *it;
+
+    if (*it != config::suspend_mode_type) {
+      CLAMSHELL_WARN(
+        "suspend mode \"{}\" is not available, falling back to \"{}\"",
+        config::to_string(config::suspend_mode_type),
+        config::to_string(*it)
+      );
     }
 
-    unfreeze_user_processes();
-    nvidia::resume(use_suspend_mode);
+    return true;
   }
+
+  return false;
+}
+
+void suspend() noexcept {
+  sync();
+  nvidia::suspend(use_suspend_mode);
+
+  if (move_self_to_system_slice() && freeze_user_processes()) {
+    switch (use_suspend_mode) {
+      case config::suspend_mode::freeze:
+        freeze();
+        break;
+      case config::suspend_mode::suspend_to_ram:
+        suspend_to_ram();
+        break;
+      case config::suspend_mode::suspend_to_disk:
+        suspend_to_disk();
+        break;
+    }
+  }
+
+  unfreeze_user_processes();
+  nvidia::resume(use_suspend_mode);
 }

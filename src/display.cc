@@ -13,53 +13,51 @@ namespace {
   constexpr const char* display_dir = "/sys/class/drm/";
 }
 
-namespace clamshell {
-  std::optional<unique_fd> get_display_fd() noexcept {
-    int fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_KOBJECT_UEVENT);
+std::optional<utils::unique_fd> get_display_fd() noexcept {
+  int fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_KOBJECT_UEVENT);
 
-    if (fd >= 0) {
-      sockaddr_nl addr {
-        .nl_family = AF_NETLINK,
-        .nl_groups = 1,
-      };
+  if (fd >= 0) {
+    sockaddr_nl addr {
+      .nl_family = AF_NETLINK,
+      .nl_groups = 1,
+    };
 
-      if (bind(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) >= 0) {
-        return fd;
-      }
-
-      close(fd);
+    if (bind(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) >= 0) {
+      return fd;
     }
 
-    return std::nullopt;
+    close(fd);
   }
 
-  int get_display_count() noexcept {
-    int count = 0;
+  return std::nullopt;
+}
 
-    for (const auto& file : std::filesystem::directory_iterator(display_dir)) {
-      const auto path = file.path();
+int get_display_count() noexcept {
+  int count = 0;
 
-      const bool is_card = path
-        .filename()
-        .native()
-        .starts_with("card");
+  for (const auto& file : std::filesystem::directory_iterator(display_dir)) {
+    const auto path = file.path();
 
-      if (!is_card) {
-        continue;
-      }
+    const bool is_card = path
+      .filename()
+      .native()
+      .starts_with("card");
 
-      std::ifstream card((path / "status"));
-
-      if (card.is_open()) {
-        std::string status;
-        std::getline(card, status);
-
-        if (status == "connected") {
-          count++;
-        }
-      }
+    if (!is_card) {
+      continue;
     }
 
-    return count;
+    std::ifstream card((path / "status"));
+
+    if (card.is_open()) {
+      std::string status;
+      std::getline(card, status);
+
+      if (status == "connected") {
+        count++;
+      }
+    }
   }
+
+  return count;
 }

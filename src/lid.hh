@@ -5,9 +5,7 @@
 
 #include "utils.hh"
 
-namespace clamshell {
-  std::optional<unique_fd> get_lid_fd() noexcept;
-  bool get_lid_closed(unique_fd& fd) noexcept;
-}
+std::optional<utils::unique_fd> get_lid_fd() noexcept;
+bool get_lid_closed(utils::unique_fd& fd) noexcept;
 
 #endif

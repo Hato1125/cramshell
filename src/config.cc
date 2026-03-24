@@ -12,7 +12,7 @@ namespace {
   constexpr const char* dir = "clamshell";
   constexpr const char* file = "config.conf";
 
-  using namespace clamshell::config;
+  using namespace config;
   using namespace std::string_view_literals;
 
   nvidia_method parse_nvidia_method(std::string_view type) noexcept {
@@ -47,7 +47,7 @@ namespace {
   }
 }
 
-namespace clamshell::config {
+namespace config {
   void load() noexcept {
     const auto user_path = std::format(
       "{}/{}/{}",
