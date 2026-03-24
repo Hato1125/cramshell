@@ -13,10 +13,10 @@ namespace {
   constexpr const char* display_dir = "/sys/class/drm/";
 }
 
-std::optional<utils::unique_fd> get_display_fd() noexcept {
-  int fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_KOBJECT_UEVENT);
+utils::unique_fd get_display_fd() noexcept {
+  utils::unique_fd fd(socket(AF_NETLINK, SOCK_RAW, NETLINK_KOBJECT_UEVENT));
 
-  if (fd >= 0) {
+  if (fd) {
     sockaddr_nl addr {
       .nl_family = AF_NETLINK,
       .nl_groups = 1,
@@ -25,11 +25,9 @@ std::optional<utils::unique_fd> get_display_fd() noexcept {
     if (bind(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) >= 0) {
       return fd;
     }
-
-    close(fd);
   }
 
-  return std::nullopt;
+  return utils::invalid_fd;
 }
 
 int get_display_count() noexcept {
@@ -43,18 +41,16 @@ int get_display_count() noexcept {
       .native()
       .starts_with("card");
 
-    if (!is_card) {
-      continue;
-    }
+    if (is_card) {
+      std::ifstream card(path / "status");
 
-    std::ifstream card((path / "status"));
+      if (card.is_open()) {
+        std::string status;
+        std::getline(card, status);
 
-    if (card.is_open()) {
-      std::string status;
-      std::getline(card, status);
-
-      if (status == "connected") {
-        count++;
+        if (status == "connected") {
+          count++;
+        }
       }
     }
   }

@@ -24,18 +24,15 @@ namespace {
   }
 }
 
-std::optional<utils::unique_fd> get_lid_fd() noexcept {
+utils::unique_fd get_lid_fd() noexcept {
   for (const auto& file : std::filesystem::directory_iterator("/dev/input/")) {
-    if (int fd = open(file.path().c_str(), O_RDONLY); fd >= 0) {
-      if (has_sw_event(fd) && has_lid_event(fd)) {
-        return fd;
-      }
-
-      close(fd);
+    utils::unique_fd fd(open(file.path().c_str(), O_RDONLY));
+    if (fd && has_sw_event(fd) && has_lid_event(fd)) {
+      return fd;
     }
   }
 
-  return std::nullopt;
+  return utils::invalid_fd;
 }
 
 bool get_lid_closed(utils::unique_fd& fd) noexcept {

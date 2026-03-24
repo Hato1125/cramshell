@@ -15,7 +15,7 @@
 
 template <void hook(bool closed, int displays)>
 bool poll() noexcept {
-  auto epfd = utils::make_fd(epoll_create1(0));
+  utils::unique_fd epfd(epoll_create1(0));
   if (!epfd) {
     CLAMSHELL_FATAL("failed to create epoll instance: {}", strerror(errno));
     return false;
@@ -25,10 +25,10 @@ bool poll() noexcept {
   if (lid) {
     epoll_event event {
       .events = EPOLLIN,
-      .data { .fd = *lid }
+      .data { .fd = lid }
     };
 
-    if (epoll_ctl(epfd, EPOLL_CTL_ADD, *lid, &event) < 0) {
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, lid, &event) < 0) {
       CLAMSHELL_FATAL("cannot monitor lid: epoll_ctl failed ({})", strerror(errno));
       return false;
     }
@@ -41,10 +41,10 @@ bool poll() noexcept {
   if (display) {
     epoll_event event {
       .events = EPOLLIN,
-      .data { .fd = *display }
+      .data { .fd = display }
     };
 
-    if (epoll_ctl(epfd, EPOLL_CTL_ADD, *display, &event) < 0) {
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, display, &event) < 0) {
       CLAMSHELL_FATAL("cannot monitor display hotplug: epoll_ctl failed ({})", strerror(errno));
       return false;
     }
@@ -55,7 +55,7 @@ bool poll() noexcept {
 
   epoll_event events[1];
 
-  bool closed = get_lid_closed(*lid);
+  bool closed = get_lid_closed(lid);
   int displays = get_display_count();
 
   hook(closed, displays);
@@ -66,7 +66,7 @@ bool poll() noexcept {
       return false;
     }
 
-    if (events[0].data.fd == *lid) {
+    if (events[0].data.fd == lid) {
       input_event e;
 
       if (read(events[0].data.fd, &e, sizeof(e)) < 0) {
@@ -85,11 +85,11 @@ bool poll() noexcept {
         closed = e.value;
         hook(closed, displays);
       }
-    } else if (events[0].data.fd == *display) {
+    } else if (events[0].data.fd == display) {
       char buffer[4096];
 
       const auto length = read(
-        *display,
+        display,
         buffer,
         sizeof(buffer)
       );
