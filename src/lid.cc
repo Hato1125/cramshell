@@ -4,11 +4,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <sys/ioctl.h>
+
 #include <linux/input.h>
 #include <linux/input-event-codes.h>
 
-#include <sys/ioctl.h>
-#include <sys/epoll.h>
 
 #include "lid.hh"
 

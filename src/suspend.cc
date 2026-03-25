@@ -81,22 +81,22 @@ namespace {
     }
   }
 
-  bool is_freeze_available(const sleep_caps& caps) noexcept {
-    return caps.freeze;
-  }
-
-  bool is_suspend_to_ram_available(
-    const sleep_caps& sleep_caps,
-    const mem_sleep_caps& mem_caps
+  bool is_mode_available(
+    config::suspend_mode mode,
+    const sleep_caps& scaps,
+    const mem_sleep_caps& mcaps
   ) noexcept {
-    return sleep_caps.mem && mem_caps.deep;
+    switch (mode) {
+      using enum config::suspend_mode;
+
+      case freeze: return scaps.freeze;
+      case suspend_to_ram: return scaps.mem && mcaps.deep;
+      case suspend_to_disk: return scaps.disk;
+    }
+    return false;
   }
 
-  bool is_suspend_to_disk_available(const sleep_caps& caps) noexcept {
-    return caps.disk;
-  }
-
-  void freeze() noexcept {
+  void exec_freeze() noexcept {
     CLAMSHELL_TRACE("execute suspend with \033[1mfreeze\033[22m");
     std::ofstream state(power_state_path);
     state << "freeze";
@@ -105,8 +105,8 @@ namespace {
     }
   }
 
-  void suspend_to_ram() noexcept {
-    CLAMSHELL_TRACE("execute suspend with suspend to ram");
+  void exec_suspend_to_ram() noexcept {
+    CLAMSHELL_TRACE("execute suspend with \033[1msuspend to ram\033[22m");
     std::ofstream mem(mem_power_state_path);
     mem << "deep";
     if (!mem.good()) {
@@ -121,12 +121,12 @@ namespace {
     }
   }
 
-  void suspend_to_disk() noexcept {
+  void exec_suspend_to_disk() noexcept {
     CLAMSHELL_TRACE("execute suspend with \033[1msuspend to disk\033[22m");
     std::ofstream state(power_state_path);
     state << "disk";
     if (!state.good()) {
-      CLAMSHELL_ERROR("Failed to write to \"{}\" for suspend to disk", power_state_path);
+      CLAMSHELL_ERROR("failed to write to \"{}\" for suspend to disk", power_state_path);
     }
   }
 
@@ -180,17 +180,8 @@ bool check_suspend_caps() noexcept {
   );
 
   if (!config::fallback) {
-    switch (config::suspend_mode_type) {
-      case config::suspend_mode::freeze:
-        use_suspend_mode = config::suspend_mode::freeze;
-        return is_freeze_available(sleep_caps);
-      case config::suspend_mode::suspend_to_ram:
-        use_suspend_mode = config::suspend_mode::suspend_to_ram;
-        return is_suspend_to_ram_available(sleep_caps, mem_caps);
-      case config::suspend_mode::suspend_to_disk:
-        use_suspend_mode = config::suspend_mode::suspend_to_disk;
-        return is_suspend_to_disk_available(sleep_caps);
-    }
+    use_suspend_mode = config::suspend_mode_type;
+    return is_mode_available(config::suspend_mode_type, sleep_caps, mem_caps);
   }
 
   using mode = config::suspend_mode;
@@ -201,20 +192,16 @@ bool check_suspend_caps() noexcept {
     { mode::suspend_to_disk, mode::suspend_to_ram, mode::freeze },
   }};
 
-  const auto is_available = [&sleep_caps, &mem_caps](mode m) -> bool {
-    switch (m) {
-      case mode::freeze: return is_freeze_available(sleep_caps);
-      case mode::suspend_to_ram: return is_suspend_to_ram_available(sleep_caps, mem_caps);
-      case mode::suspend_to_disk: return is_suspend_to_disk_available(sleep_caps);
-    }
-    return false;
-  };
-
   const auto& order = fallbacks[
     static_cast<std::size_t>(config::suspend_mode_type)
   ];
 
-  const auto it = std::ranges::find_if(order, is_available);
+  const auto it = std::ranges::find_if(
+    order,
+    [&sleep_caps, &mem_caps](config::suspend_mode mode) {
+      return is_mode_available(mode, sleep_caps, mem_caps);
+    }
+  );
 
   if (it != order.end()) {
     use_suspend_mode = *it;
@@ -239,15 +226,11 @@ void suspend() noexcept {
 
   if (move_self_to_system_slice() && freeze_user_processes()) {
     switch (use_suspend_mode) {
-      case config::suspend_mode::freeze:
-        freeze();
-        break;
-      case config::suspend_mode::suspend_to_ram:
-        suspend_to_ram();
-        break;
-      case config::suspend_mode::suspend_to_disk:
-        suspend_to_disk();
-        break;
+      using enum config::suspend_mode;
+
+      case freeze: exec_freeze(); break;
+      case suspend_to_ram: exec_suspend_to_ram(); break;
+      case suspend_to_disk: exec_suspend_to_disk(); break;
     }
   }
 

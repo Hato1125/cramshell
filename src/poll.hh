@@ -53,7 +53,7 @@ bool poll() noexcept {
     return false;
   }
 
-  epoll_event events[1];
+  epoll_event event;
 
   bool closed = get_lid_closed(lid);
   int displays = get_display_count();
@@ -61,15 +61,15 @@ bool poll() noexcept {
   hook(closed, displays);
 
   while (true) {
-    if (epoll_wait(epfd, events, 1, -1) < 0) {
+    if (epoll_wait(epfd, &event, 1, -1) < 0) {
       CLAMSHELL_FATAL("epoll_wait failed: {}", strerror(errno));
       return false;
     }
 
-    if (events[0].data.fd == lid) {
+    if (event.data.fd == lid) {
       input_event e;
 
-      if (read(events[0].data.fd, &e, sizeof(e)) < 0) {
+      if (read(event.data.fd, &e, sizeof(e)) < 0) {
         CLAMSHELL_FATAL("failed to read lid event: {}", strerror(errno));
         return false;
       }
@@ -85,7 +85,7 @@ bool poll() noexcept {
         closed = e.value;
         hook(closed, displays);
       }
-    } else if (events[0].data.fd == display) {
+    } else if (event.data.fd == display) {
       char buffer[4096];
 
       const auto length = read(
