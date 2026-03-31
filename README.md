@@ -78,3 +78,8 @@ Default: `official_script`
 |:-|:-|
 | `official_script` | Uses `/usr/bin/nvidia-sleep.sh` This is the recommended option. |
 | `direct_proc` | Directly uses `/proc/driver/nvidia/suspend` Not recommended due to instability. |
+
+## Roadmap
+- [ ] Turn off the laptop display using DPMS
+- [ ] Allow user configuration via D-Bus
+- [ ] Add AC power connection as an optional condition
